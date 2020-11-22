@@ -1,0 +1,284 @@
+/* USER CODE BEGIN Header */
+/**
+  ******************************************************************************
+  * @file           : main.c
+  * @brief          : Main program body
+  ******************************************************************************
+  * @attention
+  *
+  * <h2><center>&copy; Copyright (c) 2020 STMicroelectronics.
+  * All rights reserved.</center></h2>
+  *
+  * This software component is licensed by ST under BSD 3-Clause license,
+  * the "License"; You may not use this file except in compliance with the
+  * License. You may obtain a copy of the License at:
+  *                        opensource.org/licenses/BSD-3-Clause
+  *
+  ******************************************************************************
+  */
+/* USER CODE END Header */
+
+/* Includes ------------------------------------------------------------------*/
+#include "main.h"
+#include "dma.h"
+#include "tim.h"
+#include "usart.h"
+#include "gpio.h"
+#include <stdio.h>
+#include <string.h>
+/* Private includes ----------------------------------------------------------*/
+/* USER CODE BEGIN Includes */
+void proccesDmaData(const uint8_t* data, uint16_t len);
+/* USER CODE END Includes */
+
+/* Private typedef -----------------------------------------------------------*/
+/* USER CODE BEGIN PTD */
+
+/* USER CODE END PTD */
+
+/* Private define ------------------------------------------------------------*/
+/* USER CODE BEGIN PD */
+/* USER CODE END PD */
+
+/* Private macro -------------------------------------------------------------*/
+/* USER CODE BEGIN PM */
+
+/* USER CODE END PM */
+
+/* Private variables ---------------------------------------------------------*/
+
+/* USER CODE BEGIN PV */
+int test= 0;
+uint8_t test_message[] = "Print this message if works";
+int start = 0;
+int count = 0;
+int capL = 0;
+int lowL = 0;
+
+/* USER CODE END PV */
+
+/* Private function prototypes -----------------------------------------------*/
+void SystemClock_Config(void);
+/* USER CODE BEGIN PFP */
+
+/* USER CODE END PFP */
+
+/* Private user code ---------------------------------------------------------*/
+/* USER CODE BEGIN 0 */
+
+/* USER CODE END 0 */
+
+/**
+  * @brief  The application entry point.
+  * @retval int
+  */
+int main(void)
+{
+  /* USER CODE BEGIN 1 */
+
+  /* USER CODE END 1 */
+
+  /* MCU Configuration--------------------------------------------------------*/
+
+  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
+  HAL_Init();
+
+  /* USER CODE BEGIN Init */
+
+  /* USER CODE END Init */
+
+  /* Configure the system clock */
+  SystemClock_Config();
+
+  /* USER CODE BEGIN SysInit */
+
+  /* USER CODE END SysInit */
+
+  /* Initialize all configured peripherals */
+  MX_GPIO_Init();
+  MX_DMA_Init();
+  MX_TIM2_Init();
+  MX_TIM3_Init();
+  MX_USART2_UART_Init();
+  /* USER CODE BEGIN 2 */
+  uint8_t tx_data[1000];
+  uint8_t tx_data1[] = "Buffer capacity: ";
+  uint8_t tx_data2[] = " bytes, occupied memory: ";
+
+  uint8_t tx_data3[] = " bytes, load [in %]: ";
+
+  uint8_t tx_data4[] = "%\r\n";
+
+  char buffer_size_string[4];
+  char used_memory_string[10];
+  char load_string[3];
+  int buffer_size_int = DMA_USART2_BUFFER_SIZE;
+  sprintf(buffer_size_string, "%d", buffer_size_int);
+
+
+  	  //type your code here:
+  USART2_RegisterCallback(proccesDmaData);
+  HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
+    HAL_TIM_Base_Start_IT(&htim3);
+
+  /* USER CODE END 2 */
+
+  /* Infinite loop */
+  /* USER CODE BEGIN WHILE */
+  while (1)
+  {
+    /* USER CODE END WHILE */
+	#if POLLING
+  	//Polling for new data, no interrupts
+  		USART2_CheckDmaReception();
+  		LL_mDelay(10);
+	#else
+  		USART2_PutBuffer(tx_data, sizeof(tx_data));
+  		LL_mDelay(1000);
+	#endif
+
+	//memset(tx_data,0,1000);
+
+	sprintf(used_memory_string, "%d", occupied_memory);
+	//itoa(occupied_memory, used_memory_string, 10);
+	gcvt(load, 4, load_string);
+
+	//strcat(tx_data, tx_data1);
+
+	USART2_PutBuffer(tx_data1, sizeof(tx_data1));
+	USART2_PutBuffer(buffer_size_string, sizeof(buffer_size_string));
+	USART2_PutBuffer(tx_data2, sizeof(tx_data2));
+	USART2_PutBuffer(used_memory_string, sizeof(used_memory_string));
+	USART2_PutBuffer(tx_data3, sizeof(tx_data3));
+	USART2_PutBuffer(load_string, sizeof(load_string));
+	USART2_PutBuffer(tx_data4, sizeof(tx_data4));
+	LL_mDelay(200);
+    /* USER CODE BEGIN 3 */
+  }
+  /* USER CODE END 3 */
+}
+
+
+void setDutyCycle(uint8_t D){
+    TIM2->CCR1 = D;
+}
+
+/**
+  * @brief System Clock Configuration
+  * @retval None
+  */
+void SystemClock_Config(void)
+{
+  LL_FLASH_SetLatency(LL_FLASH_LATENCY_0);
+
+  if(LL_FLASH_GetLatency() != LL_FLASH_LATENCY_0)
+  {
+  Error_Handler();  
+  }
+  LL_RCC_HSI_Enable();
+
+   /* Wait till HSI is ready */
+  while(LL_RCC_HSI_IsReady() != 1)
+  {
+    
+  }
+  LL_RCC_HSI_SetCalibTrimming(16);
+  LL_RCC_SetAHBPrescaler(LL_RCC_SYSCLK_DIV_1);
+  LL_RCC_SetAPB1Prescaler(LL_RCC_APB1_DIV_1);
+  LL_RCC_SetAPB2Prescaler(LL_RCC_APB1_DIV_1);
+  LL_RCC_SetSysClkSource(LL_RCC_SYS_CLKSOURCE_HSI);
+
+   /* Wait till System clock is ready */
+  while(LL_RCC_GetSysClkSource() != LL_RCC_SYS_CLKSOURCE_STATUS_HSI)
+  {
+  
+  }
+  LL_SetSystemCoreClock(8000000);
+
+   /* Update the time base */
+  if (HAL_InitTick (TICK_INT_PRIORITY) != HAL_OK)
+  {
+    Error_Handler();  
+  };
+}
+
+/* USER CODE BEGIN 4 */
+void proccesDmaData(const uint8_t* data, uint16_t len)
+{
+	/* Process received data */
+
+		// type your algorithm here:
+
+	for(uint8_t i = 0; i < len; i++)
+	{
+		if(*(data+i) == '#')
+		{
+			start = 1;
+		}
+		else if(*(data+i) == '$')
+		{
+			start = 0;
+			count = 0;
+			lowL = 0;
+		    capL = 0;
+		}
+
+		if(start == 1)
+		{
+			count++;
+			if(count >= 34)
+			{
+				start = 0;
+				count = 0;
+				lowL = 0;
+				capL = 0;
+			}
+			else
+			{
+				if(*(data+i) > 96 && *(data+i) < 123)
+				{
+					lowL++;
+				}
+				if(*(data+i) > 64 && *(data+i) < 91)
+				{
+					capL++;
+				}
+			}
+
+		}
+
+
+	}
+}
+/* USER CODE END 4 */
+
+/**
+  * @brief  This function is executed in case of error occurrence.
+  * @retval None
+  */
+void Error_Handler(void)
+{
+  /* USER CODE BEGIN Error_Handler_Debug */
+  /* User can add his own implementation to report the HAL error return state */
+
+  /* USER CODE END Error_Handler_Debug */
+}
+
+#ifdef  USE_FULL_ASSERT
+/**
+  * @brief  Reports the name of the source file and the source line number
+  *         where the assert_param error has occurred.
+  * @param  file: pointer to the source file name
+  * @param  line: assert_param error line source number
+  * @retval None
+  */
+void assert_failed(uint8_t *file, uint32_t line)
+{ 
+  /* USER CODE BEGIN 6 */
+  /* User can add his own implementation to report the file name and line number,
+     tex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
+  /* USER CODE END 6 */
+}
+#endif /* USE_FULL_ASSERT */
+
+/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
