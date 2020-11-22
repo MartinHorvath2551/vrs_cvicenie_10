@@ -20,7 +20,6 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "usart.h"
 #include "stm32f3xx_it.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -57,7 +56,7 @@
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
-
+extern TIM_HandleTypeDef htim3;
 /* USER CODE BEGIN EV */
 
 /* USER CODE END EV */
@@ -185,7 +184,7 @@ void SysTick_Handler(void)
   /* USER CODE BEGIN SysTick_IRQn 0 */
 
   /* USER CODE END SysTick_IRQn 0 */
-  
+  HAL_IncTick();
   /* USER CODE BEGIN SysTick_IRQn 1 */
 
   /* USER CODE END SysTick_IRQn 1 */
@@ -203,6 +202,7 @@ void SysTick_Handler(void)
   */
 void DMA1_Channel6_IRQHandler(void)
 {
+
 	if(LL_DMA_IsActiveFlag_TC6(DMA1) == SET)
 	{
 		USART2_CheckDmaReception();
@@ -213,6 +213,13 @@ void DMA1_Channel6_IRQHandler(void)
 		USART2_CheckDmaReception();
 		LL_DMA_ClearFlag_HT6(DMA1);
 	}
+  /* USER CODE BEGIN DMA1_Channel6_IRQn 0 */
+
+  /* USER CODE END DMA1_Channel6_IRQn 0 */
+  
+  /* USER CODE BEGIN DMA1_Channel6_IRQn 1 */
+
+  /* USER CODE END DMA1_Channel6_IRQn 1 */
 }
 
 /**
@@ -220,27 +227,42 @@ void DMA1_Channel6_IRQHandler(void)
   */
 void DMA1_Channel7_IRQHandler(void)
 {
+  /* USER CODE BEGIN DMA1_Channel7_IRQn 0 */
 	if(LL_DMA_IsActiveFlag_TC7(DMA1) == SET)
 	{
 		LL_DMA_ClearFlag_TC7(DMA1);
+  /* USER CODE BEGIN DMA1_Channel7_IRQn 0 */
 
 		while(LL_USART_IsActiveFlag_TC(USART2) == RESET);
 		LL_DMA_DisableChannel(DMA1, LL_DMA_CHANNEL_7);
 	}
+  
+  /* USER CODE BEGIN DMA1_Channel7_IRQn 1 */
+
+  /* USER CODE END DMA1_Channel7_IRQn 1 */
 }
 
 /**
-  * @brief This function handles USART2 global interrupt.
+  * @brief This function handles TIM3 global interrupt.
   */
-void USART2_IRQHandler(void)
+void TIM3_IRQHandler(void)
 {
+  /* USER CODE BEGIN TIM3_IRQn 0 */
+
+  /* USER CODE END TIM3_IRQn 0 */
+  HAL_TIM_IRQHandler(&htim3);
+  /* USER CODE BEGIN TIM3_IRQn 1 */
+
+  /* USER CODE END TIM3_IRQn 1 */
+}
+
+/* USER CODE BEGIN 1 */
+void USART2_IRQHandler(void){
 	if(LL_USART_IsActiveFlag_IDLE(USART2))
 	{
 		USART2_CheckDmaReception();
 		LL_USART_ClearFlag_IDLE(USART2);
 	}
 }
-/* USER CODE BEGIN 1 */
-
 /* USER CODE END 1 */
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
