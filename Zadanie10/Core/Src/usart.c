@@ -178,8 +178,6 @@ void USART2_CheckDmaReception(void)
 			else
 			{
 
-
-
 				USART2_ProcessData(&bufferUSART2dma[old_pos], DMA_USART2_BUFFER_SIZE - old_pos);
 				//clear bufferUSART2dma
 				memset(bufferUSART2dma, 0, DMA_USART2_BUFFER_SIZE);

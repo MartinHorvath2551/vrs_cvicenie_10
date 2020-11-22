@@ -48,12 +48,10 @@ void proccesDmaData(const uint8_t* data, uint16_t len);
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-int test= 0;
-uint8_t test_message[] = "Print this message if works";
+
 int start = 0;
-int count = 0;
-int capL = 0;
-int lowL = 0;
+int autoON = 1;
+static char message[10]= "";
 
 /* USER CODE END PV */
 
@@ -101,25 +99,11 @@ int main(void)
   MX_TIM3_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
-  uint8_t tx_data[1000];
-  uint8_t tx_data1[] = "Buffer capacity: ";
-  uint8_t tx_data2[] = " bytes, occupied memory: ";
-
-  uint8_t tx_data3[] = " bytes, load [in %]: ";
-
-  uint8_t tx_data4[] = "%\r\n";
-
-  char buffer_size_string[4];
-  char used_memory_string[10];
-  char load_string[3];
-  int buffer_size_int = DMA_USART2_BUFFER_SIZE;
-  sprintf(buffer_size_string, "%d", buffer_size_int);
-
 
   	  //type your code here:
   USART2_RegisterCallback(proccesDmaData);
   HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
-    HAL_TIM_Base_Start_IT(&htim3);
+  HAL_TIM_Base_Start_IT(&htim3);
 
   /* USER CODE END 2 */
 
@@ -137,22 +121,7 @@ int main(void)
   		LL_mDelay(1000);
 	#endif
 
-	//memset(tx_data,0,1000);
 
-	sprintf(used_memory_string, "%d", occupied_memory);
-	//itoa(occupied_memory, used_memory_string, 10);
-	gcvt(load, 4, load_string);
-
-	//strcat(tx_data, tx_data1);
-
-	USART2_PutBuffer(tx_data1, sizeof(tx_data1));
-	USART2_PutBuffer(buffer_size_string, sizeof(buffer_size_string));
-	USART2_PutBuffer(tx_data2, sizeof(tx_data2));
-	USART2_PutBuffer(used_memory_string, sizeof(used_memory_string));
-	USART2_PutBuffer(tx_data3, sizeof(tx_data3));
-	USART2_PutBuffer(load_string, sizeof(load_string));
-	USART2_PutBuffer(tx_data4, sizeof(tx_data4));
-	LL_mDelay(200);
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
@@ -205,51 +174,55 @@ void SystemClock_Config(void)
 /* USER CODE BEGIN 4 */
 void proccesDmaData(const uint8_t* data, uint16_t len)
 {
-	/* Process received data */
+    /* Process received data */
 
-		// type your algorithm here:
+        // type your algorithm here:
 
-	for(uint8_t i = 0; i < len; i++)
-	{
-		if(*(data+i) == '#')
-		{
-			start = 1;
-		}
-		else if(*(data+i) == '$')
-		{
-			start = 0;
-			count = 0;
-			lowL = 0;
-		    capL = 0;
-		}
+    for(uint8_t i = 0; i < len; i++)
+    {
 
-		if(start == 1)
-		{
-			count++;
-			if(count >= 34)
-			{
-				start = 0;
-				count = 0;
-				lowL = 0;
-				capL = 0;
-			}
-			else
-			{
-				if(*(data+i) > 96 && *(data+i) < 123)
-				{
-					lowL++;
-				}
-				if(*(data+i) > 64 && *(data+i) < 91)
-				{
-					capL++;
-				}
-			}
+        if ((*(data+i) == '$') && (start))
+        {
+            CompareMessage();
+            memset(message,0,sizeof(message));
+            start = 0;
+            break;
+        }
+        else if(*(data+i) == '$')
+        {
+            start = 1;
+            break;
+        }
 
-		}
+        if(start >= 1)
+        {
+            message[start-1]= *(data+i);
+            start++;
+        }
 
-
-	}
+    }
 }
+
+void CompareMessage()
+{
+	static int count = 0;
+    if(strcmp(message, "auto")==0)
+        {
+    	count++;
+           	autoON = 1;
+        }
+    if(strcmp(message, "manual")==0)
+        {
+    	count++;
+    		autoON = 0;
+        }
+    if(!autoON)
+    {
+
+    }
+
+}
+
 /* USER CODE END 4 */
 
 /**
