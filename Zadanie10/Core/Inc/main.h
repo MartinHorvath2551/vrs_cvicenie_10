@@ -74,11 +74,13 @@ typedef struct
 
 /* Private defines -----------------------------------------------------------*/
 /* USER CODE BEGIN Private defines */
+
 uint8_t Buffer_capacity;
 uint8_t occupied_memory;
 float load;
 
 void CompareMessage();
+
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

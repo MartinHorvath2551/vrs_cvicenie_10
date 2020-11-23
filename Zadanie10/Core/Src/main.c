@@ -22,8 +22,8 @@
 #include "main.h"
 #include "dma.h"
 #include "tim.h"
-#include "usart.h"
 #include "gpio.h"
+#include "usart.h"
 #include <stdio.h>
 #include <string.h>
 /* Private includes ----------------------------------------------------------*/
@@ -48,11 +48,11 @@ void proccesDmaData(const uint8_t* data, uint16_t len);
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-
 int start = 0;
+static char message[34]= "";
 int autoON = 1;
-static char message[10]= "";
-
+int PWM = 100;
+int enteredmode = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -128,8 +128,9 @@ int main(void)
 }
 
 
-void setDutyCycle(uint8_t D){
-    TIM2->CCR1 = D;
+void setDutyCycle(uint8_t D)
+{
+	TIM2->CCR1 = D;
 }
 
 /**
@@ -194,10 +195,15 @@ void proccesDmaData(const uint8_t* data, uint16_t len)
             break;
         }
 
-        if(start >= 1)
+        if((start >= 1) && (start <= 34))
         {
             message[start-1]= *(data+i);
             start++;
+        }
+        else
+        {
+        	start = 0;
+        	memset(message,0,sizeof(message));
         }
 
     }
@@ -205,19 +211,30 @@ void proccesDmaData(const uint8_t* data, uint16_t len)
 
 void CompareMessage()
 {
-	static int count = 0;
-    if(strcmp(message, "auto")==0)
-        {
-    	count++;
-           	autoON = 1;
-        }
-    if(strcmp(message, "manual")==0)
-        {
-    	count++;
-    		autoON = 0;
-        }
-    if(!autoON)
+
+	if(strcmp(message, "auto") == 0)
     {
+    	autoON = 1;
+    	PWM = 100;
+    	enteredmode = 1;
+    }
+	if(strcmp(message, "manual") == 0)
+    {
+    	autoON = 0;
+    	enteredmode = 1;
+    }
+
+    if((autoON == 0) && (enteredmode == 1))
+    {
+    	if(strncmp(message, "PWM",3) == 0)
+    	{
+    		PWM = atoi(message+3);
+      		if (PWM > 99)
+    		{
+    			PWM = 100;
+    		}
+      		enteredmode = 0;
+    	}
 
     }
 

@@ -42,13 +42,14 @@
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN PV */
-
+int ledON = 0;
+uint8_t dutycycle = 0;
+extern int PWM;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN PFP */
-int je_zapnuta = 0;
-uint8_t hodnota = 0;
+
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -250,20 +251,25 @@ void DMA1_Channel7_IRQHandler(void)
 void TIM3_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM3_IRQn 0 */
-	if(!je_zapnuta){
-	            hodnota++;
-	            setDutyCycle(hodnota);
-	            if(hodnota >= 100){
-	                je_zapnuta = 1;
-	            }
-	        }
-	        if(je_zapnuta){
-	            hodnota--;
-	            setDutyCycle(hodnota);
-	            if(hodnota <= 0){
-	                je_zapnuta = 0;
-	            }
-	        }
+	if (ledON == 0)
+	{
+		dutycycle++;
+		setDutyCycle(dutycycle);
+		if (dutycycle == PWM)
+		{
+			ledON = 1;
+		}
+	}
+	if (ledON == 1)
+	{
+		dutycycle--;
+		setDutyCycle(dutycycle);
+		if (dutycycle == 0)
+		{
+			ledON = 0;
+		}
+	}
+
   /* USER CODE END TIM3_IRQn 0 */
   HAL_TIM_IRQHandler(&htim3);
   /* USER CODE BEGIN TIM3_IRQn 1 */
