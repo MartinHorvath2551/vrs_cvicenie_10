@@ -58,13 +58,13 @@ extern int PWM;
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
-extern TIM_HandleTypeDef htim3;
+
 /* USER CODE BEGIN EV */
 
 /* USER CODE END EV */
 
 /******************************************************************************/
-/*           Cortex-M4 Processor Interruption and Exception Handlers          */ 
+/*           Cortex-M4 Processor Interruption and Exception Handlers          */
 /******************************************************************************/
 /**
   * @brief This function handles Non maskable interrupt.
@@ -186,7 +186,7 @@ void SysTick_Handler(void)
   /* USER CODE BEGIN SysTick_IRQn 0 */
 
   /* USER CODE END SysTick_IRQn 0 */
-  HAL_IncTick();
+
   /* USER CODE BEGIN SysTick_IRQn 1 */
 
   /* USER CODE END SysTick_IRQn 1 */
@@ -204,6 +204,8 @@ void SysTick_Handler(void)
   */
 void DMA1_Channel6_IRQHandler(void)
 {
+  /* USER CODE BEGIN DMA1_Channel6_IRQn 0 */
+
 
 	if(LL_DMA_IsActiveFlag_TC6(DMA1) == SET)
 	{
@@ -215,10 +217,8 @@ void DMA1_Channel6_IRQHandler(void)
 		USART2_CheckDmaReception();
 		LL_DMA_ClearFlag_HT6(DMA1);
 	}
-  /* USER CODE BEGIN DMA1_Channel6_IRQn 0 */
-
   /* USER CODE END DMA1_Channel6_IRQn 0 */
-  
+
   /* USER CODE BEGIN DMA1_Channel6_IRQn 1 */
 
   /* USER CODE END DMA1_Channel6_IRQn 1 */
@@ -229,6 +229,7 @@ void DMA1_Channel6_IRQHandler(void)
   */
 void DMA1_Channel7_IRQHandler(void)
 {
+  /* USER CODE BEGIN DMA1_Channel7_IRQn 0 */
 	if(LL_DMA_IsActiveFlag_TC7(DMA1) == SET)
 		{
 			LL_DMA_ClearFlag_TC7(DMA1);
@@ -236,10 +237,8 @@ void DMA1_Channel7_IRQHandler(void)
 			while(LL_USART_IsActiveFlag_TC(USART2) == RESET);
 			LL_DMA_DisableChannel(DMA1, LL_DMA_CHANNEL_7);
 		}
-  /* USER CODE BEGIN DMA1_Channel7_IRQn 0 */
-
   /* USER CODE END DMA1_Channel7_IRQn 0 */
-  
+
   /* USER CODE BEGIN DMA1_Channel7_IRQn 1 */
 
   /* USER CODE END DMA1_Channel7_IRQn 1 */
@@ -251,27 +250,30 @@ void DMA1_Channel7_IRQHandler(void)
 void TIM3_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM3_IRQn 0 */
-	if (ledON == 0)
+	if (LL_TIM_IsActiveFlag_UPDATE(TIM3))
 	{
-		dutycycle++;
-		setDutyCycle(dutycycle);
-		if (dutycycle == PWM)
+		if (ledON == 0)
 		{
-			ledON = 1;
+			dutycycle++;
+			setDutyCycle(dutycycle);
+			if (dutycycle == PWM)
+			{
+				ledON = 1;
+			}
 		}
-	}
-	if (ledON == 1)
-	{
-		dutycycle--;
-		setDutyCycle(dutycycle);
-		if (dutycycle == 0)
+		if (ledON == 1)
 		{
-			ledON = 0;
+			dutycycle--;
+			setDutyCycle(dutycycle);
+			if (dutycycle == 0)
+			{
+				ledON = 0;
+			}
 		}
 	}
 
+	LL_TIM_ClearFlag_UPDATE(TIM3);
   /* USER CODE END TIM3_IRQn 0 */
-  HAL_TIM_IRQHandler(&htim3);
   /* USER CODE BEGIN TIM3_IRQn 1 */
 
   /* USER CODE END TIM3_IRQn 1 */

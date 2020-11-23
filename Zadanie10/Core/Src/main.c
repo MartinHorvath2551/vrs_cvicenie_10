@@ -22,8 +22,8 @@
 #include "main.h"
 #include "dma.h"
 #include "tim.h"
-#include "gpio.h"
 #include "usart.h"
+#include "gpio.h"
 #include <stdio.h>
 #include <string.h>
 /* Private includes ----------------------------------------------------------*/
@@ -79,7 +79,13 @@ int main(void)
   /* MCU Configuration--------------------------------------------------------*/
 
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
-  HAL_Init();
+
+  LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_SYSCFG);
+  LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_PWR);
+
+  NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_4);
+
+  /* System interrupt init*/
 
   /* USER CODE BEGIN Init */
 
@@ -102,8 +108,11 @@ int main(void)
 
   	  //type your code here:
   USART2_RegisterCallback(proccesDmaData);
-  HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
-  HAL_TIM_Base_Start_IT(&htim3);
+  LL_TIM_CC_EnableChannel(TIM2, LL_TIM_CHANNEL_CH1);
+  LL_TIM_EnableIT_UPDATE(TIM2);
+  LL_TIM_EnableCounter(TIM2);
+  LL_TIM_EnableIT_UPDATE(TIM3);
+  LL_TIM_EnableCounter(TIM3);
 
   /* USER CODE END 2 */
 
@@ -113,15 +122,12 @@ int main(void)
   {
     /* USER CODE END WHILE */
 	#if POLLING
-  	//Polling for new data, no interrupts
-  		USART2_CheckDmaReception();
-  		LL_mDelay(10);
+		USART2_CheckDmaReception();
+		LL_mDelay(10);
 	#else
-  		USART2_PutBuffer(tx_data, sizeof(tx_data));
-  		LL_mDelay(1000);
+		USART2_PutBuffer(tx_data, sizeof(tx_data));
+		LL_mDelay(1000);
 	#endif
-
-
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
@@ -132,7 +138,6 @@ void setDutyCycle(uint8_t D)
 {
 	TIM2->CCR1 = D;
 }
-
 /**
   * @brief System Clock Configuration
   * @retval None
@@ -143,14 +148,14 @@ void SystemClock_Config(void)
 
   if(LL_FLASH_GetLatency() != LL_FLASH_LATENCY_0)
   {
-  Error_Handler();  
+  Error_Handler();
   }
   LL_RCC_HSI_Enable();
 
    /* Wait till HSI is ready */
   while(LL_RCC_HSI_IsReady() != 1)
   {
-    
+
   }
   LL_RCC_HSI_SetCalibTrimming(16);
   LL_RCC_SetAHBPrescaler(LL_RCC_SYSCLK_DIV_1);
@@ -161,15 +166,10 @@ void SystemClock_Config(void)
    /* Wait till System clock is ready */
   while(LL_RCC_GetSysClkSource() != LL_RCC_SYS_CLKSOURCE_STATUS_HSI)
   {
-  
-  }
-  LL_SetSystemCoreClock(8000000);
 
-   /* Update the time base */
-  if (HAL_InitTick (TICK_INT_PRIORITY) != HAL_OK)
-  {
-    Error_Handler();  
-  };
+  }
+  LL_Init1msTick(8000000);
+  LL_SetSystemCoreClock(8000000);
 }
 
 /* USER CODE BEGIN 4 */
@@ -263,7 +263,7 @@ void Error_Handler(void)
   * @retval None
   */
 void assert_failed(uint8_t *file, uint32_t line)
-{ 
+{
   /* USER CODE BEGIN 6 */
   /* User can add his own implementation to report the file name and line number,
      tex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
