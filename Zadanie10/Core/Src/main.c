@@ -52,7 +52,7 @@ int start = 0;
 static char message[34]= "";
 int autoON = 1;
 int PWM = 100;
-int enteredmode = 0;
+int enteredmode = 1;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -215,7 +215,7 @@ void CompareMessage()
 	if(strcmp(message, "auto") == 0)
     {
     	autoON = 1;
-    	PWM = 100;
+    	//PWM = 100;
     	enteredmode = 1;
     }
 	if(strcmp(message, "manual") == 0)
@@ -224,7 +224,7 @@ void CompareMessage()
     	enteredmode = 1;
     }
 
-    if((autoON == 0) && (enteredmode == 1))
+    if(autoON == 0)
     {
     	if(strncmp(message, "PWM",3) == 0)
     	{

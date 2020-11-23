@@ -45,6 +45,7 @@
 int ledON = 0;
 uint8_t dutycycle = 0;
 extern int PWM;
+extern int enteredmode;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -252,24 +253,27 @@ void TIM3_IRQHandler(void)
   /* USER CODE BEGIN TIM3_IRQn 0 */
 	if (LL_TIM_IsActiveFlag_UPDATE(TIM3))
 	{
-		if (ledON == 0)
+		if(enteredmode)
 		{
-			dutycycle++;
-			setDutyCycle(dutycycle);
-			if (dutycycle == PWM)
-			{
-				ledON = 1;
-			}
+			toggleLed();
 		}
-		if (ledON == 1)
+		else
 		{
-			dutycycle--;
-			setDutyCycle(dutycycle);
-			if (dutycycle == 0)
+			if(PWM>dutycycle)
 			{
-				ledON = 0;
+				increase();
 			}
+			else if(PWM<dutycycle)
+			{
+				decrease();
+			}
+			else{
+				setDutyCycle(dutycycle);
+			}
+
 		}
+
+
 	}
 
 	LL_TIM_ClearFlag_UPDATE(TIM3);
@@ -297,6 +301,40 @@ void USART2_IRQHandler(void)
 }
 
 /* USER CODE BEGIN 1 */
+
+void toggleLed(){
+
+	if (ledON == 0)
+		{
+			increase();
+			if (dutycycle == 100)
+			{
+				ledON = 1;
+			}
+		}
+	if (ledON == 1)
+	{
+		decrease();
+		if (dutycycle == 0)
+		{
+			ledON = 0;
+		}
+	}
+
+}
+
+void increase(){
+
+	dutycycle++;
+	setDutyCycle(dutycycle);
+
+}
+void decrease(){
+
+	dutycycle--;
+	setDutyCycle(dutycycle);
+
+}
 
 /* USER CODE END 1 */
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
